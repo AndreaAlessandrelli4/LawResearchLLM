@@ -6,3 +6,5 @@ numpy==1.26.4
 pdfplumber
 PyMuPDF
 python-docx
+mistral-inference == 1.5.0
+mistral-common == 1.4.4
