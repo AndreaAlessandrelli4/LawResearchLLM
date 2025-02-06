@@ -224,12 +224,9 @@ elif input_mode == "Carica un file PDF/TXT/DOCX":
         except:
             st.warning("Carica un file PDF, DOCX o TXT valido.")
 
-
-
-
-# Mostra il testo estratto
-if query:
-    st.text_area("Testo estratto:", query, height=200)
+    # Mostra il testo estratto
+    if query:
+        st.text_area("Testo estratto:", query, height=200)
 
 # Opzione per scegliere il metodo di input
 input_filtri = st.radio(
