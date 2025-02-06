@@ -83,7 +83,7 @@ def scores(text):
 
 
 # Funzione per eseguire la query su Weaviate
-def query_weaviate(client, query, num_max, alpha, filters, search_prop=["testo_parziale", 'summary'],
+def query_weaviate(client, model, query, num_max, alpha, filters, search_prop=["testo_parziale", 'summary'],
                    retrieved_proop=["riferimenti_legge","testo_parziale", 'estrazione_mistral', 'summary', 'testo_completo', 'id_originale']):
     more_prop = collect_paths(filters)
     if len(more_prop)>=1:
@@ -93,7 +93,7 @@ def query_weaviate(client, query, num_max, alpha, filters, search_prop=["testo_p
             .get("TestoCompleto", retrieved_proop)
             .with_hybrid(
                 query=query,
-                vector=list(generate_embeddings(query)),
+                vector=list(generate_embeddings(query, model)),
                 properties=search_prop,
                 alpha=alpha,
                 fusion_type=HybridFusion.RELATIVE_SCORE,
@@ -104,7 +104,7 @@ def query_weaviate(client, query, num_max, alpha, filters, search_prop=["testo_p
             .get("TestoCompleto", retrieved_proop)
             .with_hybrid(
                 query=query,
-                vector=list(generate_embeddings(query)),
+                vector=list(generate_embeddings(query, model)),
                 properties=search_prop,
                 alpha=alpha,
                 fusion_type=HybridFusion.RELATIVE_SCORE,
