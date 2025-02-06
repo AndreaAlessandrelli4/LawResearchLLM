@@ -146,7 +146,7 @@ def load_model_LLM():
 
     snapshot_download(repo_id="mistralai/Ministral-8B-Instruct-2410", allow_patterns=["params.json", "consolidated.safetensors", "tekken.json"], local_dir=mistral_models_path)
     tokenizer = MistralTokenizer.from_file(f"{mistral_models_path}/tekken.json")
-    model = Transformer.from_folder(mistral_models_path)    
+    model = Transformer.from_folder(mistral_models_path, device="cpu")    
     return model, tokenizer
 
 model, tokenizer = load_model_LLM()
