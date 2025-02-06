@@ -8,3 +8,4 @@ PyMuPDF
 python-docx
 mistral-inference == 1.5.0
 mistral-common == 1.4.4
+huggingface_hub == 0.26.3
