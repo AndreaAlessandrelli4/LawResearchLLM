@@ -353,7 +353,7 @@ input_filtri = st.radio(
 )
 
 
-if input_mode == "Selezione manuale":
+if input_filtri == "Selezione manuale":
     # Generazione dinamica dei filtri con menu a tendina espandibili
     st.title("Filtri di Ricerca")
 
@@ -382,9 +382,9 @@ if input_mode == "Selezione manuale":
                         value=(options[0], options[1]),
                         key=f"{main_key}_{sub_key}"
                     )
-elif input_mode == "Non usare alcun tipo di filtro":
+elif input_filtri == "Non usare alcun tipo di filtro":
     selected_filters = {}
-elif input_mode == "Inferisci automaticamente i filtri":
+elif input_filtri == "Inferisci automaticamente i filtri":
     selected_filters = {}
     
     
