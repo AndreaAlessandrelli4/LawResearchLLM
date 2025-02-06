@@ -11,7 +11,16 @@ from weaviate.gql.get import HybridFusion
 import pdfplumber
 import fitz  # PyMuPDF
 import docx
-from util import extract_text_from_docx, extract_text_from_pdf, extract_text_from_txt, cleaning, generate_embeddings, collect_paths, scores, query_weaviate
+
+from huggingface_hub import snapshot_download
+from pathlib import Path
+from mistral_inference.transformer import Transformer
+from mistral_inference.generate import generate
+from mistral_common.tokens.tokenizers.mistral import MistralTokenizer
+from mistral_common.protocol.instruct.messages import UserMessage
+from mistral_common.protocol.instruct.request import ChatCompletionRequest
+
+from util import extract_text_from_docx, extract_text_from_pdf, extract_text_from_txt, cleaning, generate_embeddings, collect_paths, scores, query_weaviate, prompt_query, risultato
 
 
 
@@ -129,6 +138,20 @@ def load_model():
 model_rag = load_model()
 
 
+@st.cache_resource
+def load_model_LLM():
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    mistral_models_path = Path.home().joinpath('mistral_models', '8B-Instruct')
+    mistral_models_path.mkdir(parents=True, exist_ok=True)
+
+    snapshot_download(repo_id="mistralai/Ministral-8B-Instruct-2410", allow_patterns=["params.json", "consolidated.safetensors", "tekken.json"], local_dir=mistral_models_path)
+    tokenizer = MistralTokenizer.from_file(f"{mistral_models_path}/tekken.json")
+    model = Transformer.from_folder(mistral_models_path)    
+    return model, tokenizer
+
+model, tokenizer = load_model_LLM()
+
+
 #@st.cache_resource
 #def get_weaviate_client():
 #    return weaviate.Client(
@@ -224,9 +247,12 @@ elif input_mode == "Carica un file PDF/TXT/DOCX":
         except:
             st.warning("Carica un file PDF, DOCX o TXT valido.")
 
-    # Mostra il testo estratto
-    if query:
-        st.text_area("Testo estratto:", query, height=200)
+
+
+
+# Mostra il testo estratto
+if query:
+    st.text_area("Testo estratto:", query, height=200)
 
 # Opzione per scegliere il metodo di input
 input_filtri = st.radio(
@@ -278,11 +304,53 @@ if st.button("Esegui Ricerca"):
 
     if selected_filters == {}:
         # Convertire i filtri in formato Weaviate
-        weaviate_filters = {
+        if input_filtri == "Non usare alcun tipo di filtro":
+            weaviate_filters = {
+                "operator": "And",
+                "operands": []
+            }
+        elif input_filtri == "Inferisci automaticamente i filtri":
+            weaviate_filters = {
             "operator": "And",
             "operands": []
-        }
-
+            }
+            ris_LLM = risultato(query, model, tokenizer)
+            for sub_key, value in ris_LLM.items():
+                if isinstance(value, tuple):  # Per range numerici
+                    if value[0] == 0 and value[1] == 0:
+                        continue
+                    elif sub_key=="dettagli_figli__numero_totale_di_figli":
+                        weaviate_filters["operands"].append({
+                            "operator": "And",
+                            "operands":[
+                                {"path": [f"{sub_key}"],
+                            "operator": "GreaterThanEqual",
+                            "valueNumber": value[0]
+                            },
+                            {
+                                "path": [f"{sub_key}"],
+                                "operator": "LessThanEqual",
+                                "valueNumber": value[1]
+                            }]}  )
+                    else:
+                        weaviate_filters["operands"].append({
+                        "operator": "And",
+                        "operands":[
+                            {"path": [f"{sub_key}"],
+                        "operator": "GreaterThanEqual",
+                        "valueInt": value[0]
+                        },
+                        {
+                            "path": [f"{sub_key}"],
+                            "operator": "LessThanEqual",
+                            "valueInt": value[1]
+                        }]}  )
+                elif value != "NON SPECIFICATO":  # Applica il filtro solo se diverso da "NON SPECIFICATO"
+                    weaviate_filters["operands"].append({
+                        "path": [f"{sub_key}"],
+                        "operator": "Equal",
+                        "valueText": value
+                    })
     else:
         # Convertire i filtri in formato Weaviate
         weaviate_filters = {
