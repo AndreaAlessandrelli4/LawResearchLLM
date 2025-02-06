@@ -12,7 +12,7 @@ import pdfplumber
 import fitz  # PyMuPDF
 import docx
 
-from huggingface_hub import snapshot_download
+from huggingface_hub import login, snapshot_download
 from pathlib import Path
 from mistral_inference.transformer import Transformer
 from mistral_inference.generate import generate
@@ -22,8 +22,8 @@ from mistral_common.protocol.instruct.request import ChatCompletionRequest
 
 from util import extract_text_from_docx, extract_text_from_pdf, extract_text_from_txt, cleaning, generate_embeddings, collect_paths, scores, query_weaviate, prompt_query, risultato
 
-
-
+hf_token = os.getenv('HUGGINGFACE_API_KEY')
+login(hf_token)
 
 st.markdown(
     """
