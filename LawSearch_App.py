@@ -138,18 +138,18 @@ def load_model():
 model_rag = load_model()
 
 
-@st.cache_resource
-def load_model_LLM():
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    mistral_models_path = Path.home().joinpath('mistral_models', '8B-Instruct')
-    mistral_models_path.mkdir(parents=True, exist_ok=True)
+#@st.cache_resource
+#def load_model_LLM():
+#    device = "cuda" if torch.cuda.is_available() else "cpu"
+#    mistral_models_path = Path.home().joinpath('mistral_models', '8B-Instruct')
+#    mistral_models_path.mkdir(parents=True, exist_ok=True)
 
-    snapshot_download(repo_id="mistralai/Ministral-8B-Instruct-2410", allow_patterns=["params.json", "consolidated.safetensors", "tekken.json"], local_dir=mistral_models_path)
-    tokenizer = MistralTokenizer.from_file(f"{mistral_models_path}/tekken.json")
-    model = Transformer.from_folder(mistral_models_path, device="cpu")    
-    return model, tokenizer
+#    snapshot_download(repo_id="mistralai/Ministral-8B-Instruct-2410", allow_patterns=["params.json", "consolidated.safetensors", "tekken.json"], local_dir=mistral_models_path)
+#    tokenizer = MistralTokenizer.from_file(f"{mistral_models_path}/tekken.json")
+#    model = Transformer.from_folder(mistral_models_path, device="cpu")    
+#    return model, tokenizer
 
-model, tokenizer = load_model_LLM()
+#model, tokenizer = load_model_LLM()
 
 
 #@st.cache_resource
@@ -316,43 +316,44 @@ if st.button("Esegui Ricerca"):
             "operator": "And",
             "operands": []
             }
-            ris_LLM = risultato(query, model, tokenizer)
-            for sub_key, value in ris_LLM.items():
-                if isinstance(value, tuple):  # Per range numerici
-                    if value[0] == 0 and value[1] == 0:
-                        continue
-                    elif sub_key=="dettagli_figli__numero_totale_di_figli":
-                        weaviate_filters["operands"].append({
+            if False:
+                ris_LLM = risultato(query, model, tokenizer)
+                for sub_key, value in ris_LLM.items():
+                    if isinstance(value, tuple):  # Per range numerici
+                        if value[0] == 0 and value[1] == 0:
+                            continue
+                        elif sub_key=="dettagli_figli__numero_totale_di_figli":
+                            weaviate_filters["operands"].append({
+                                "operator": "And",
+                                "operands":[
+                                    {"path": [f"{sub_key}"],
+                                "operator": "GreaterThanEqual",
+                                "valueNumber": value[0]
+                                },
+                                {
+                                    "path": [f"{sub_key}"],
+                                    "operator": "LessThanEqual",
+                                    "valueNumber": value[1]
+                                }]}  )
+                        else:
+                            weaviate_filters["operands"].append({
                             "operator": "And",
                             "operands":[
                                 {"path": [f"{sub_key}"],
                             "operator": "GreaterThanEqual",
-                            "valueNumber": value[0]
+                            "valueInt": value[0]
                             },
                             {
                                 "path": [f"{sub_key}"],
                                 "operator": "LessThanEqual",
-                                "valueNumber": value[1]
+                                "valueInt": value[1]
                             }]}  )
-                    else:
+                    elif value != "NON SPECIFICATO":  # Applica il filtro solo se diverso da "NON SPECIFICATO"
                         weaviate_filters["operands"].append({
-                        "operator": "And",
-                        "operands":[
-                            {"path": [f"{sub_key}"],
-                        "operator": "GreaterThanEqual",
-                        "valueInt": value[0]
-                        },
-                        {
                             "path": [f"{sub_key}"],
-                            "operator": "LessThanEqual",
-                            "valueInt": value[1]
-                        }]}  )
-                elif value != "NON SPECIFICATO":  # Applica il filtro solo se diverso da "NON SPECIFICATO"
-                    weaviate_filters["operands"].append({
-                        "path": [f"{sub_key}"],
-                        "operator": "Equal",
-                        "valueText": value
-                    })
+                            "operator": "Equal",
+                            "valueText": value
+                        })
     else:
         # Convertire i filtri in formato Weaviate
         weaviate_filters = {
