@@ -11,8 +11,7 @@ from weaviate.gql.get import HybridFusion
 import pdfplumber
 import fitz  # PyMuPDF
 import docx
-from util import extract_text_from_docx, extract_text_from_pdf, extract_text_from_txt, 
-cleaning, generate_embeddings, collect_paths, scores, query_weaviate
+from util import *
 
 
 
