@@ -260,7 +260,7 @@ elif input_mode == "Carica un file PDF/TXT/DOCX":
 # Opzione per scegliere il metodo di input
 input_filtri = st.radio(
     "Inserimento filtri di ricerca:",
-    ("Selezione manuale", "Inferisci automaticamente i filtri", "Non usare alcun tipo di filtro")
+    ("Selezione manuale", "Non usare alcun tipo di filtro")
 )
 
 
